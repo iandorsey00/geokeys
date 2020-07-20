@@ -1,3 +1,4 @@
+import argparse
 import csv
 import sys
 
@@ -22,11 +23,17 @@ def merge(args):
     source_csv = readcsv(args.source_csv)
     target_csv = readcsv(args.target_csv)
 
-    source_geo_names = list(map(lambda x,y: (x, y[0]), enumerate(source_csv)))
-    target_geo_names = list(map(lambda x,y: (x, y[0]), enumerate(target_csv)))
+    print(source_csv[:5])
 
-    source_keys_and_geo_names = list(map(lambda x,y: (x, generate_key(y), y), source_geo_names))
-    target_keys_and_geo_names = list(map(lambda x,y: (x, generate_key(y), y), target_geo_names))
+    source_geo_names = list(map(lambda x: (x[0], x[1][0]), enumerate(source_csv)))
+    target_geo_names = list(map(lambda x: (x[0], x[1][0]), enumerate(target_csv)))
+
+    print(source_geo_names[:5])
+
+    source_keys_and_geo_names = list(map(lambda x: (x[0], generate_key(x[1]), x[1]), source_geo_names))
+    target_keys_and_geo_names = list(map(lambda x: (x[0], generate_key(x[1]), x[1]), target_geo_names))
+
+    print(source_keys_and_geo_names[:5])
 
     matches = []
 
@@ -36,14 +43,16 @@ def merge(args):
             if source_key == target_key:
                 these_matches.append((source_id, target_id))
             
-        if len(these_matches) > 1:
-            raise DoubleKeyError("Key relationship not one-to-one.")
-        elif len(these_matches) == 1:
-            matches.append(these_matches[0])
+        # if len(these_matches) > 1:
+        #     raise DoubleKeyError("Key relationship not one-to-one.")
+        # elif len(these_matches) == 1:
+        #     matches.append(these_matches[0])
 
-    csvwriter = csv.writer()
+        matches += these_matches
 
-    for source_id, target_id in match:
+    csvwriter = csv.writer(sys.stdout)
+
+    for source_id, target_id in matches:
         csvwriter.writerow(source_csv[source_id] + target_csv[target_id])
 
 ###############################################################################

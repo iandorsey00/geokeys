@@ -1,4 +1,4 @@
-keys_list = [   ('us:ny:newyork', 'New York city, New York', 8443713),
+key_list = [   ('us:ny:newyork', 'New York city, New York', 8443713),
     ('us:ca:losangeles', 'Los Angeles city, California', 3959657),
     ('us:il:chicago', 'Chicago city, Illinois', 2718555),
     ('us:tx:houston', 'Houston city, Texas', 2295982),

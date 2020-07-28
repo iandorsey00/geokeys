@@ -2,7 +2,7 @@ import argparse
 import csv
 import sys
 
-from tools import generate_key
+from advanced_tools import get_key
 
 class DoubleKeyError(Exception):
     pass
@@ -23,25 +23,21 @@ def merge(args):
     source_csv = readcsv(args.source_csv)
     target_csv = readcsv(args.target_csv)
 
-    print(source_csv[:5])
-
     source_geo_names = list(map(lambda x: (x[0], x[1][0]), enumerate(source_csv)))
     target_geo_names = list(map(lambda x: (x[0], x[1][0]), enumerate(target_csv)))
 
-    print(source_geo_names[:5])
+    source_keys_and_geo_names = list(map(lambda x: (x[0], get_key(x[1]), x[1]), source_geo_names))
+    target_keys_and_geo_names = list(map(lambda x: (x[0], get_key(x[1]), x[1]), target_geo_names))
 
-    source_keys_and_geo_names = list(map(lambda x: (x[0], generate_key(x[1]), x[1]), source_geo_names))
-    target_keys_and_geo_names = list(map(lambda x: (x[0], generate_key(x[1]), x[1]), target_geo_names))
-
-    print(source_keys_and_geo_names[:5])
-
+    keys = []
     matches = []
 
     for source_id, source_key, geo_name in source_keys_and_geo_names:
         these_matches = []
         for target_id, target_key, geo_name in target_keys_and_geo_names:
-            if source_key == target_key:
+            if source_key == target_key and source_key not in keys:
                 these_matches.append((source_id, target_id))
+                keys.append(source_key)
             
         # if len(these_matches) > 1:
         #     raise DoubleKeyError("Key relationship not one-to-one.")
@@ -64,6 +60,7 @@ parser = argparse.ArgumentParser(
 parser.set_defaults(func=merge)
 
 # Create arguments
+parser.add_argument('-p', '--use-population', help='Use populations for a better matches')
 parser.add_argument('source_csv', help='The CSV file to which to join data')
 parser.add_argument('target_csv', help='The CSV file that contains data to be joined')
 

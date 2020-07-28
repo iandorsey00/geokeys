@@ -2,6 +2,9 @@ import re
 
 from places import places_list
 
+def has_state(geostring):
+    return ',' in geostring
+
 def get_state(geostring):
     if geostring == 'Islamorada, Village of Islands village; Florida':
         return 'Florida'
@@ -12,64 +15,116 @@ def get_state(geostring):
         return state.group(1)
 
 def get_prefix(state):
+    state = state.lower()
+
     prefixes = {
-        'Alabama': 'us:al:',
-        'Alaska': 'us:ak:',
-        'Arizona': 'us:az:',
-        'Arkansas': 'us:ar:',
-        'California': 'us:ca:',
-        'Colorado': 'us:co:',
-        'Connecticut': 'us:ct:',
-        'Delaware': 'us:de:',
-        'District of Columbia': 'us:dc:',
-        'Florida': 'us:fl:',
-        'Georgia': 'us:ga:',
-        'Hawaii': 'us:hi:',
-        'Idaho': 'us:id:',
-        'Illinois': 'us:il:',
-        'Indiana': 'us:in:',
-        'Iowa': 'us:ia:',
-        'Kansas': 'us:ks:',
-        'Kentucky': 'us:ky:',
-        'Louisiana': 'us:la:',
-        'Maine': 'us:me:',
-        'Maryland': 'us:md:',
-        'Massachusetts': 'us:ma:',
-        'Michigan': 'us:mi:',
-        'Minnesota': 'us:mn:',
-        'Mississippi': 'us:ms:',
-        'Missouri': 'us:mo:',
-        'Montana': 'us:mt:',
-        'Nebraska': 'us:ne:',
-        'Nevada': 'us:nv:',
-        'New Hampshire': 'us:nh:',
-        'New Jersey': 'us:nj:',
-        'New Mexico': 'us:nm:',
-        'New York': 'us:ny:',
-        'North Carolina': 'us:nc:',
-        'North Dakota': 'us:nd:',
-        'Ohio': 'us:oh:',
-        'Oklahoma': 'us:ok:',
-        'Oregon': 'us:or:',
-        'Pennsylvania': 'us:pa:',
-        'Rhode Island': 'us:ri:',
-        'South Carolina': 'us:sc:',
-        'South Dakota': 'us:sd:',
-        'Tennessee': 'us:tn:',
-        'Texas': 'us:tx:',
-        'Utah': 'us:ut:',
-        'Vermont': 'us:vt:',
-        'Virginia': 'us:va:',
-        'Washington': 'us:wa:',
-        'West Virginia': 'us:wv:',
-        'Wisconsin': 'us:wi:',
-        'Wyoming': 'us:wy:',
-    }
+        'alabama': 'us:al:',
+        'alaska': 'us:ak:',
+        'arizona': 'us:az:',
+        'arkansas': 'us:ar:',
+        'california': 'us:ca:',
+        'colorado': 'us:co:',
+        'connecticut': 'us:ct:',
+        'delaware': 'us:de:',
+        'district of columbia': 'us:dc:',
+        'florida': 'us:fl:',
+        'georgia': 'us:ga:',
+        'hawaii': 'us:hi:',
+        'idaho': 'us:id:',
+        'illinois': 'us:il:',
+        'indiana': 'us:in:',
+        'iowa': 'us:ia:',
+        'kansas': 'us:ks:',
+        'kentucky': 'us:ky:',
+        'louisiana': 'us:la:',
+        'maine': 'us:me:',
+        'maryland': 'us:md:',
+        'massachusetts': 'us:ma:',
+        'michigan': 'us:mi:',
+        'minnesota': 'us:mn:',
+        'mississippi': 'us:ms:',
+        'missouri': 'us:mo:',
+        'montana': 'us:mt:',
+        'nebraska': 'us:ne:',
+        'nevada': 'us:nv:',
+        'new hampshire': 'us:nh:',
+        'new jersey': 'us:nj:',
+        'new mexico': 'us:nm:',
+        'new york': 'us:ny:',
+        'north carolina': 'us:nc:',
+        'north dakota': 'us:nd:',
+        'ohio': 'us:oh:',
+        'oklahoma': 'us:ok:',
+        'oregon': 'us:or:',
+        'pennsylvania': 'us:pa:',
+        'rhode island': 'us:ri:',
+        'south carolina': 'us:sc:',
+        'south dakota': 'us:sd:',
+        'tennessee': 'us:tn:',
+        'texas': 'us:tx:',
+        'utah': 'us:ut:',
+        'vermont': 'us:vt:',
+        'virginia': 'us:va:',
+        'washington': 'us:wa:',
+        'west virginia': 'us:wv:',
+        'wisconsin': 'us:wi:',
+        'wyoming': 'us:wy:',
+        'al': 'us:al:',
+        'ak': 'us:ak:',
+        'az': 'us:az:',
+        'ar': 'us:ar:',
+        'ca': 'us:ca:',
+        'co': 'us:co:',
+        'ct': 'us:ct:',
+        'de': 'us:de:',
+        'dc': 'us:dc:',
+        'fl': 'us:fl:',
+        'ga': 'us:ga:',
+        'hi': 'us:hi:',
+        'id': 'us:id:',
+        'il': 'us:il:',
+        'in': 'us:in:',
+        'ia': 'us:ia:',
+        'ks': 'us:ks:',
+        'ky': 'us:ky:',
+        'la': 'us:la:',
+        'me': 'us:me:',
+        'md': 'us:md:',
+        'ma': 'us:ma:',
+        'mi': 'us:mi:',
+        'mn': 'us:mn:',
+        'ms': 'us:ms:',
+        'mo': 'us:mo:',
+        'mt': 'us:mt:',
+        'ne': 'us:ne:',
+        'nv': 'us:nv:',
+        'nh': 'us:nh:',
+        'nj': 'us:nj:',
+        'nm': 'us:nm:',
+        'ny': 'us:ny:',
+        'nc': 'us:nc:',
+        'nd': 'us:nd:',
+        'oh': 'us:oh:',
+        'ok': 'us:ok:',
+        'or': 'us:or:',
+        'pa': 'us:pa:',
+        'ri': 'us:ri:',
+        'sc': 'us:sc:',
+        'sd': 'us:sd:',
+        'tn': 'us:tn:',
+        'tx': 'us:tx:',
+        'ut': 'us:ut:',
+        'vt': 'us:vt:',
+        'va': 'us:va:',
+        'wa': 'us:wa:',
+        'wv': 'us:wv:',
+        'wi': 'us:wi:',
+        'wy': 'us:wy:'
+        }
 
     return prefixes[state]
 
-def generate_key(geostring):
-    '''Tranform a geostring into a key'''
+def preprocess(geostring):
     geostring_before = geostring
 
     # Handle special cases
@@ -112,9 +167,13 @@ def generate_key(geostring):
     if geostring == 'San Buenaventura (Ventura) city, California':
         return 'us:ca:ventura'
 
+    state = ''
+    prefix = ''
+
     # Get state and prefix
-    state = get_state(geostring)
-    prefix = get_prefix(state)
+    if has_state(geostring):
+        state = get_state(geostring)
+        prefix = get_prefix(state)
 
     # Remove place_type
     geostring = re.sub(' city,.*?$', '', geostring)
@@ -150,3 +209,7 @@ def generate_key(geostring):
     geostring = geostring.replace("'", '')
 
     return prefix + geostring
+
+def generate_key(geostring):
+    '''Tranform a geostring into a key'''
+    return preprocess(geostring)

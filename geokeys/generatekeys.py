@@ -7,7 +7,7 @@ import sqlite3
 import pprint
 import sys
 from places import places_list
-from tools import generate_key
+from basic_tools import generate_key
 
 # DuplicateException ##########################################################
 class DuplicateException(Exception):
@@ -77,5 +77,5 @@ cur.execute('''SELECT * FROM geokeys''')
 keys_list_raw = cur.fetchall()
 
 pp = pprint.PrettyPrinter(indent=4)
-keys_list = 'keys_list = ' + pp.pformat(keys_list_raw)
+keys_list = 'key_list = ' + pp.pformat(keys_list_raw)
 print(keys_list)

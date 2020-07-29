@@ -12,21 +12,32 @@ def has_prefix(geostring):
     '''Does the string have a prefix, e.g. 'us:ca:'?'''
     return ':' in geostring
 
-def get_exact_match(geostring):
-    '''Get the exact match for a geostring that has been finalized'''
-        for key in key_list:
-            if key[0] == geostring:
-                return key[0]
+def partial_match(geostring, key):
+    '''Determine if geostring is a partial match for a key'''
 
-def get_partial_matches(geostring):
+    # Currently, there are only two option strings in geokeys.
+    option_strings = ['', '/', '//']
+
+    for option_string in option_strings:
+        length = len(geostring + option_string)
+        if geostring + option_string == key[-length:]:
+            return True
+
+    return False
+
+def get_exact_match(geostring, pool):
+    '''Get the exact match for a geostring that has been finalized'''
+    for key in pool:
+        if key[0] == geostring:
+            return key[0]
+
+def get_partial_matches(geostring, pool):
     '''Get a key for which the context is not known'''
-    geostring = ':' + geostring
-    length = len(geostring)
 
     matches = []
 
     for key in pool:
-        if key[0][-length:] == geostring:
+        if partial_match(geostring, key[0]):
                 matches.append(key)
 
     return matches
@@ -42,27 +53,27 @@ def get_key(geostring, pool, population, print_mode=False):
         # If the string already has a prefix, search for and find the exact
         # string.
         if has_prefix(geostring):
-            get_exact_match(geostring)
+            return get_exact_match(geostring, pool)
         # Otherwise, search for and find the prefix.
         else:
-            matches = get_partial_matches(geostring)
+            matches = get_partial_matches(geostring, pool)
 
             if not print_mode:
-                return matches
+                return matches[0]
             else:
                 for match in matches:
-                    print(match)
+                    print(match[0])
     # A population was specified.
     else:
         if has_prefix(geostring):
-            get_exact_match(geostring)
+            return get_exact_match(geostring, pool)
         else:
             # Remove all chars that aren't digits.
             population = re.sub('[^0-9]', '', population)
             # Convert to int
             population = int(population)
 
-            matches = get_partial_matches(geostring)
+            matches = get_partial_matches(geostring, pool)
             candidate = ''
 
             # If there is more than one match, select the one with the closest
@@ -77,4 +88,4 @@ def get_key(geostring, pool, population, print_mode=False):
             if not print_mode:
                 return candidate
             else:
-                print candidate
+                print(candidate)

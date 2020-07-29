@@ -19,45 +19,63 @@ def readcsv(csvfile):
 
     return out
 
+def get_pool(args_context):
+    if args_context:
+        return [i for i in key_list if i[0].startswith(args.context)]
+    else:
+        return key_list
+
+def get_data_dictionary(csvrows, pool, geostring_column=0, population_column=1):
+    '''Construct (key, data_row) dictionaries'''
+    data_dictionary = dict()
+
+    for row in csvrows:
+        if args.population:
+            population = row[population_column]
+        else:
+            population = -1
+
+        data_dictionary[get_key(row[geostring_column], pool, population)] = row
+
+    return data_dictionary
+
 def merge(args):
     '''Merge data from two CSV files together on geographic names'''
+    # If a context was specified, narrow the pool (the keys to search)
+    pool = get_pool(args.context)
+
     source_csv = readcsv(args.source_csv)
     target_csv = readcsv(args.target_csv)
 
-    source_geo_names = list(map(lambda x: (x[0], x[1][0]), enumerate(source_csv)))
-    target_geo_names = list(map(lambda x: (x[0], x[1][0]), enumerate(target_csv)))
+    # Default values for the indexes of the *g*eostrings and *p*opulations
+    # for the *s*ource CSV and the *t*arget CSV
+    sg = 0
+    sp = 1
+    tg = 0
+    tp = 1
 
-    source_keys_and_geo_names = list(map(lambda x: (x[0], get_key(x[1]), x[1]), source_geo_names))
-    target_keys_and_geo_names = list(map(lambda x: (x[0], get_key(x[1]), x[1]), target_geo_names))
+    # Set values if specified on the command line.
+    if args.sg:
+        sg = args.sg
+    if args.sp:
+        sp = args.sp
+    if args.tg:
+        tg = args.tg
+    if args.tp:
+        tp = args.tp
 
-    keys = []
-    matches = []
-
-    for source_id, source_key, geo_name in source_keys_and_geo_names:
-        these_matches = []
-        for target_id, target_key, geo_name in target_keys_and_geo_names:
-            if source_key == target_key and source_key not in keys:
-                these_matches.append((source_id, target_id))
-                keys.append(source_key)
-            
-        # if len(these_matches) > 1:
-        #     raise DoubleKeyError("Key relationship not one-to-one.")
-        # elif len(these_matches) == 1:
-        #     matches.append(these_matches[0])
-
-        matches += these_matches
+    source_geos = get_data_dictionary(source_csv, pool, geostring_column=sg, population_column=sp)
+    target_geos = get_data_dictionary(target_csv, pool, geostring_column=tg, population_column=tp)
 
     csvwriter = csv.writer(sys.stdout)
 
-    for source_id, target_id in matches:
-        csvwriter.writerow(source_csv[source_id] + target_csv[target_id])
+    for key in source_geos.keys():
+        if key in target_geos.keys():
+            csvwriter.writerow(source_geos[key] + target_geos[key])
 
 def query(args):
     # If a context was specified, narrow the pool (the keys to search)
-    if args.context:
-        pool = [i for i in key_list if i[0].startswith(args.context)]
-    else:
-        pool = key_list
+    pool = get_pool(args.context)
 
     if args.population:
         population = args.population
@@ -80,6 +98,10 @@ subparsers = parser.add_subparsers(
 merge_parser = subparsers.add_parser('merge', description='Merge data from two CSV files')
 merge_parser.add_argument('-p', '--population', action='store_true', help='Specify populations for better matches')
 merge_parser.add_argument('-c', '--context', help='Specify a context for better matches')
+merge_parser.add_argument('--sg', type=int, help='Index of the geostring column for the source CSV')
+merge_parser.add_argument('--sp', type=int, help='Index of the population column for the source CSV')
+merge_parser.add_argument('--tg', type=int, help='Index of the geostring column for the target CSV')
+merge_parser.add_argument('--tp', type=int, help='Index of the population column for the target CSV')
 merge_parser.add_argument('source_csv', help='The CSV file to which to join data')
 merge_parser.add_argument('target_csv', help='The CSV file that contains data to be joined')
 merge_parser.set_defaults(func=merge)

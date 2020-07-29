@@ -201,6 +201,9 @@ def preprocess(geostring):
     for place_type in place_types_for_removal:
         geostring = re.sub(place_type, '', geostring)
 
+    # Remove state
+    geostring = re.sub(',.*?$', '', geostring)
+
     geostring_after = geostring
 
     # Covert to lowercase

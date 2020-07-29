@@ -2,6 +2,7 @@ import argparse
 import csv
 import sys
 
+from keys import key_list
 from advanced_tools import get_key
 
 class DoubleKeyError(Exception):
@@ -51,18 +52,44 @@ def merge(args):
     for source_id, target_id in matches:
         csvwriter.writerow(source_csv[source_id] + target_csv[target_id])
 
+def query(args):
+    # If a context was specified, narrow the pool (the keys to search)
+    if args.context:
+        pool = [i for i in key_list if i[0].startswith(args.context)]
+    else:
+        pool = key_list
+
+    if args.population:
+        population = args.population
+    else:
+        population = -1
+
+    get_key(args.geostring, pool, population, print_mode=True)
+
 ###############################################################################
 # Argument parsing with argparse
 
 # Create the top-level argument parser
 parser = argparse.ArgumentParser(
     description='A program that joins data about geographies on their names')
-parser.set_defaults(func=merge)
+# Create top-level subparsers
+subparsers = parser.add_subparsers(
+    help='enter geokeys <subcommand> -h for more information.')
 
-# Create arguments
-parser.add_argument('-p', '--use-population', help='Use populations for a better matches')
-parser.add_argument('source_csv', help='The CSV file to which to join data')
-parser.add_argument('target_csv', help='The CSV file that contains data to be joined')
+# Create the parsor for the "merge" command
+merge_parser = subparsers.add_parser('merge', description='Merge data from two CSV files')
+merge_parser.add_argument('-p', '--population', action='store_true', help='Specify populations for better matches')
+merge_parser.add_argument('-c', '--context', help='Specify a context for better matches')
+merge_parser.add_argument('source_csv', help='The CSV file to which to join data')
+merge_parser.add_argument('target_csv', help='The CSV file that contains data to be joined')
+merge_parser.set_defaults(func=merge)
+
+# Create the parsor for the "query" command
+query_parser = subparsers.add_parser('query', description='Query a string for a key')
+query_parser.add_argument('-p', '--population', help='Specify population for a better match')
+query_parser.add_argument('-c', '--context', help='Specify a context for a better match')
+query_parser.add_argument('geostring', help='The string to query for a key')
+query_parser.set_defaults(func=query)
 
 # Parse arguments
 args = parser.parse_args()

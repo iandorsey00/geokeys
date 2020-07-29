@@ -1,11 +1,18 @@
+'''
+Tools primarily intended for Census display labels and initial generation
+of reference keys.
+'''
+
 import re
 
 from places import places_list
 
 def has_state(geostring):
+    '''Does the string have state information?'''
     return ',' in geostring
 
 def get_state(geostring):
+    '''Get state information from the string'''
     if geostring == 'Islamorada, Village of Islands village; Florida':
         return 'Florida'
     elif geostring == 'Lynchburg, Moore County metropolitan government; Tennessee':
@@ -15,6 +22,7 @@ def get_state(geostring):
         return state.group(1)
 
 def get_prefix(state):
+    '''Reference conversion for Census Bureau display labels into keys.'''
     state = state.lower()
 
     prefixes = {
@@ -175,40 +183,41 @@ def preprocess(geostring):
         state = get_state(geostring)
         prefix = get_prefix(state)
 
-    # Remove place_type
-    geostring = re.sub(' city,.*?$', '', geostring)
-    geostring = re.sub(' town,.*?$', '', geostring)
-    geostring = re.sub(' CDP,.*?$', '', geostring)
-    geostring = re.sub(' borough,.*?$', '', geostring)
-    geostring = re.sub(' municipality,.*?$', '', geostring)
-    geostring = re.sub(' village,.*?$', '', geostring)
-    geostring = re.sub(' corporation,.*?$', '', geostring)
-    geostring = re.sub(' CDP \(.*?\),.*?$', '', geostring)
-    geostring = re.sub(' city \(.*?\),.*?$', '', geostring)
-    geostring = re.sub(' borough \(.*?\),.*?$', '', geostring)
-    geostring = re.sub(' village \(.*?\),.*?$', '', geostring)
-    # geostring = re.sub(' \(balance\),.*?$', '', geostring)
-    # geostring = re.sub(' metropolitan government \(balance\),.*?$', '', geostring)
-    # geostring = re.sub(' metro government \(balance\),.*?$', '', geostring)
-    # geostring = re.sub(' consolidated government \(balance\),.*?$', '', geostring)
-    # geostring = re.sub(' consolidated government,.*?$', '', geostring)
-    # geostring = re.sub(' urban government,.*?$', '', geostring)
-    # geostring = re.sub(' urban county,.*?$', '', geostring)
-    # geostring = re.sub(' unified government,.*?$', '', geostring)
+    # Remove place_types
+    place_types_for_removal = []
+
+    place_types_for_removal.append(' city,.*?$')
+    place_types_for_removal.append(' town,.*?$')
+    place_types_for_removal.append(' CDP,.*?$')
+    place_types_for_removal.append(' borough,.*?$')
+    place_types_for_removal.append(' municipality,.*?$')
+    place_types_for_removal.append(' village,.*?$')
+    place_types_for_removal.append(' corporation,.*?$')
+    place_types_for_removal.append(' CDP \(.*?\),.*?$')
+    place_types_for_removal.append(' city \(.*?\),.*?$')
+    place_types_for_removal.append(' borough \(.*?\),.*?$')
+    place_types_for_removal.append(' village \(.*?\),.*?$')
+
+    for place_type in place_types_for_removal:
+        geostring = re.sub(place_type, '', geostring)
+
     geostring_after = geostring
 
     # Covert to lowercase
     geostring = geostring.lower()
     # Remove whitespace
     geostring = ''.join(geostring.split())
-    # Remove other characters
-    geostring = geostring.replace('-', '')
-    geostring = geostring.replace('.', '')
-    geostring = geostring.replace(',', '')
-    geostring = geostring.replace(';', '')
-    geostring = geostring.replace("'", '')
 
-    return prefix + geostring
+    # Remove other characters
+    chars_for_removal = "-.,;'"
+    
+    for char in chars_for_removal:
+        geostring = geostring.replace(char, '')
+
+    # Add prefix
+    geostring = prefix + geostring
+
+    return geostring
 
 def generate_key(geostring):
     '''Tranform a geostring into a key'''

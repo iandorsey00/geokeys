@@ -25,12 +25,6 @@ def partial_match(geostring, key):
 
     return False
 
-def get_exact_match(geostring, pool):
-    '''Get the exact match for a geostring that has been finalized'''
-    for key in pool:
-        if key[0] == geostring:
-            return key[0]
-
 def get_partial_matches(geostring, pool):
     '''Get a key for which the context is not known'''
 
@@ -50,42 +44,34 @@ def get_key(geostring, pool, population, print_mode=False):
     geostring = preprocess(geostring)
 
     if population == -1:
-        # If the string already has a prefix, search for and find the exact
-        # string.
-        if has_prefix(geostring):
-            return get_exact_match(geostring, pool)
         # Otherwise, search for and find the prefix.
-        else:
-            matches = get_partial_matches(geostring, pool)
+        matches = get_partial_matches(geostring, pool)
 
-            if not print_mode:
-                return matches[0]
-            else:
-                for match in matches:
-                    print(match[0])
+        if not print_mode:
+            return matches[0]
+        else:
+            for match in matches:
+                print(match[0])
     # A population was specified.
     else:
-        if has_prefix(geostring):
-            return get_exact_match(geostring, pool)
+        # Remove all chars that aren't digits.
+        population = re.sub('[^0-9]', '', population)
+        # Convert to int
+        population = int(population)
+
+        matches = get_partial_matches(geostring, pool)
+        candidate = ''
+
+        # If there is more than one match, select the one with the closest
+        # population.
+        if len(matches) == 1:
+            candidate = matches[0][0]
+        elif len(matches) > 1:
+            matches = sorted(matches, key=lambda x: abs(x[2] - population))
+            candidate = matches[0][0]
+
+        # Return or print the match
+        if not print_mode:
+            return candidate
         else:
-            # Remove all chars that aren't digits.
-            population = re.sub('[^0-9]', '', population)
-            # Convert to int
-            population = int(population)
-
-            matches = get_partial_matches(geostring, pool)
-            candidate = ''
-
-            # If there is more than one match, select the one with the closest
-            # population.
-            if len(matches) == 1:
-                candidate = matches[0][0]
-            elif len(matches) > 1:
-                matches = sorted(matches, key=lambda x: abs(x[2] - population))
-                candidate = matches[0][0]
-
-            # Return or print the match
-            if not print_mode:
-                return candidate
-            else:
-                print(candidate)
+            print(candidate)

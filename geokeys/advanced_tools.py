@@ -12,6 +12,25 @@ def has_prefix(geostring):
     '''Does the string have a prefix, e.g. 'us:ca:'?'''
     return ':' in geostring
 
+def get_exact_match(geostring):
+    '''Get the exact match for a geostring that has been finalized'''
+        for key in key_list:
+            if key[0] == geostring:
+                return key[0]
+
+def get_partial_matches(geostring):
+    '''Get a key for which the context is not known'''
+    geostring = ':' + geostring
+    length = len(geostring)
+
+    matches = []
+
+    for key in pool:
+        if key[0][-length:] == geostring:
+                matches.append(key)
+
+    return matches
+
 def get_key(geostring, pool, population, print_mode=False):
     '''
     This function is intended for non-Census geostrings after key_list
@@ -23,58 +42,39 @@ def get_key(geostring, pool, population, print_mode=False):
         # If the string already has a prefix, search for and find the exact
         # string.
         if has_prefix(geostring):
-            for key in key_list:
-                if key[0] == geostring:
-                    return key[0]
+            get_exact_match(geostring)
         # Otherwise, search for and find the prefix.
         else:
-            geostring = ':' + geostring
-            length = len(geostring)
+            matches = get_partial_matches(geostring)
 
             if not print_mode:
-                for key in pool:
-                    if key[0][-length:] == geostring:
-                            return key[0]
+                return matches
             else:
-                for key in pool:
-                    if key[0][-length:] == geostring:
-                            print(key[0])
+                for match in matches:
+                    print(match)
     # A population was specified.
     else:
         if has_prefix(geostring):
-            for key in key_list:
-                if key[0] == geostring:
-                    return key[0]
+            get_exact_match(geostring)
         else:
             # Remove all chars that aren't digits.
             population = re.sub('[^0-9]', '', population)
             # Convert to int
             population = int(population)
 
-            matches = []
+            matches = get_partial_matches(geostring)
+            candidate = ''
 
-            geostring = ':' + geostring
-            length = len(geostring)
+            # If there is more than one match, select the one with the closest
+            # population.
+            if len(matches) == 1:
+                candidate = matches[0][0]
+            elif len(matches) > 1:
+                matches = sorted(matches, key=lambda x: abs(x[2] - population))
+                candidate = matches[0][0]
 
-            for key in pool:
-                if key[0][-length:] == geostring:
-                        matches.append(key)
-
+            # Return or print the match
             if not print_mode:
-                if len(matches) == 0:
-                    return None
-                if len(matches) == 1:
-                    return matches[0][0]
-                else:
-                    matches = sorted(matches, key=lambda x: abs(x[2] - population))
-                    return matches[0][0]
+                return candidate
             else:
-                if len(matches) == 0:
-                    print(None)
-                if len(matches) == 1:
-                    print(matches[0][0])
-                else:
-                    matches = sorted(matches, key=lambda x: abs(x[2] - population))
-                    print(matches[0][0])
-
-
+                print candidate

@@ -19,9 +19,14 @@ def partial_match(geostring, key):
     option_strings = ['', '/', '//']
 
     for option_string in option_strings:
-        length = len(geostring + option_string) + 1
-        if ':' + geostring + option_string == key[-length:]:
-            return True
+        if has_prefix(geostring):
+            if geostring + option_string == key:
+                return True
+        else:
+            target = ':' + geostring + option_string
+            length = len(target)
+            if target == key[-length:]:
+                return True
 
     return False
 

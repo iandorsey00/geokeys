@@ -57,7 +57,10 @@ def get_key(geostring, pool, population, print_mode=False):
         # Remove all chars that aren't digits.
         population = re.sub('[^0-9]', '', population)
         # Convert to int
-        population = int(population)
+        try:
+            population = int(population)
+        except ValueError:
+            population = 0
 
         matches = get_partial_matches(geostring, pool)
         candidate = ''

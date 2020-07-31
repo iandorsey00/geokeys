@@ -174,6 +174,8 @@ def preprocess(geostring):
     ## Places with official names that are less commonly used
     if geostring == 'San Buenaventura (Ventura) city, California':
         return 'us:ca:ventura'
+    if geostring == 'El Paso de Robles (Paso Robles) city, California':
+        return 'us:ca:pasorobles'
 
     state = ''
     prefix = ''
